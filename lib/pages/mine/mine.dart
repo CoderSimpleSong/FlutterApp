@@ -1,92 +1,58 @@
-
+/*
+ * @Author: 宋佳 
+ * @Date: 2022-06-13 09:12:19 
+ * @Last Modified by: relax
+ * @Last Modified time: 2022-06-13 15:10:04
+ */
 
 import 'package:flutter/material.dart';
-import 'package:flutter_app/common/storage.dart';
-import 'package:flutter_app/widgets/loading_widget.dart';
-import '../../common/event_bus.dart';
+import 'package:hftech_flutter/api/mine/mine.dart';
+import 'package:hftech_flutter/common/toast_widget.dart';
+import 'package:hftech_flutter/provider/global_notice.dart';
 import 'package:provider/provider.dart';
-import '../../provider/login.dart';
 
-class Mine extends StatefulWidget {
-  Mine({Key key}) : super(key: key);
+class MinePage extends StatefulWidget {
+  const MinePage({Key? key}) : super(key: key);
+
   @override
-  _MineState createState() => _MineState();
+  State<MinePage> createState() => _MinePageState();
 }
 
-class _MineState extends State<Mine> with AutomaticKeepAliveClientMixin{
-  var loginProvider;
+class _MinePageState extends State<MinePage> with AutomaticKeepAliveClientMixin{
 
   @override
   bool get wantKeepAlive => true;
-  
   @override
   void initState() {
     super.initState();
-
-    getValue();
-    eventBus.on<UserEvent>().listen((event){
-      this._getUserinfo();
-    });
-
-    // Navigator.of(context).pop();
+    //模拟 网络请求
+    //MineApi.getMinepageData();
+    ToastTool.showToast("打开我的页面");
   }
-
-  void getValue() async {
-    showInitStateLoading(context);
-    
-
-    bool islogin = await Storage.getBoolValue("isLogin");
-    double height = await Storage.getDoubleValue("height");
-    int age = await Storage.getIntValue("age");
-    String value = await Storage.getStringValue("key");
-
-    print("$islogin --- $height --- $age --- $value");
-
-    //清除指定键值对
-    bool isComplete = await Storage.removeKey("key");
-   //清除本地所有键值对
-    bool isClear = await Storage.clearAllKey();
-    Future.delayed(Duration(seconds: 3),(){
-      print("延时3s");
-      // Navigator.of(context).pop();
-      // Navigator.pop(context);
-      hideLoadingDialog(context);
-    });
-  }
-
-
-  _getUserinfo(){
-    print('获取用户信息');
-    this.loginProvider.removeToken();
-  }
-
   @override
   Widget build(BuildContext context) {
-    this.loginProvider = Provider.of<Login>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text("我的"),
-        automaticallyImplyLeading: false,
+        centerTitle: true,
       ),
-      body: _getMineWidget(),
-    );
-  }
-
-  Widget _getMineWidget(){
-    return Container(
-      color: Colors.lightBlue,
-      child: RaisedButton(
-        onPressed: (){
-          getData();
-        },
+      body:Padding(
+        padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
+        child: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Container(
+              child: Consumer<GlobalNotice>(builder: ((context, notice, _) {
+                 return Text("当前provider的取值为:${notice.hasNewsNotice}",style: TextStyle(color: Colors.black87,fontSize: 16));
+              }))
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: SizedBox(height: 20,),
+          ),
+        ],
+      ),
       ),
     );
-  }
-
-  void getData() async {
-    showMyCustomLoadingDialog(context);
-    Future.delayed(Duration(seconds: 3),(){
-      hideLoadingDialog(context);
-    });
   }
 }

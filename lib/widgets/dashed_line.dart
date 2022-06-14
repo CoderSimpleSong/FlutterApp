@@ -12,7 +12,7 @@ class DashedLine extends StatelessWidget {
     this.axis = Axis.horizontal,
     this.dashedHeight = 1,
     this.dashedWidth = 1,
-    this.color = const Color(0xffaaaaaa),
+    this.color = const Color(0xA5aaaaaa),
     this.count = 10
   });
 

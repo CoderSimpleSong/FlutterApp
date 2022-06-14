@@ -3,22 +3,54 @@
 ## 前言:
 #### 1.本项目框架搭建环境
 ```
-dart版本:2.7.0
-flutter SDK版本:1.12.13+hotfix.8
+dart版本: 2.17.1 
+flutter SDK版本: 3.0.1
 ```
 #### 2.项目运行
-clone项目之后,在当前文件夹下,终端执行```flutter packages get```
+clone项目之后,在当前文件夹下,终端执行```flutter pub get```
+#### 3.运行异常解决
+由于本框架flutterSDK较高,pull_to_refresh插件本身没有更新导致该异常.
+```
+: Warning: Operand of null-aware operation '!' has type 'WidgetsBinding' which excludes null.
+
+- 'WidgetsBinding' is from 'package:flutter/src/widgets/binding.dart' ('../../App/flutter3.0.1/packages/flutter/lib/src/widgets/binding.dart').
+
+WidgetsBinding.instance!.addPostFrameCallback((_) {
+
+               ^
+
+: Warning: Operand of null-aware operation '!' has type 'WidgetsBinding' which excludes null.
+
+- 'WidgetsBinding' is from 'package:flutter/src/widgets/binding.dart' ('../../App/flutter3.0.1/packages/flutter/lib/src/widgets/binding.dart').
+
+WidgetsBinding.instance!.addPostFrameCallback((_) {
+               ^
+
+```
+解决方案:手动删除pull_to_refresh插件内语法使用错误的地方(将instance后的!删除)
+../src/smart_refresh.dart line 513
+../src/smart_refresh.dart line 765
+../src/smart_refresh.dart line 788
+../src/smart_refresh.dart line 796
+../src/smart_refresh.dart line 803
+../src/internals/indicator_wrap.dart  line260
+../src/internals/indicator_wrap.dart  line290
+../src/internals/indicator_wrap.dart  line393
+
 ## 一、项目组织
 #### 1、文件组织形式
-所有项目源代码请放在项目根目录 src 目录下，项目所需最基本的文件包括 ``入口文件``以及``页面文件``
+所有项目源代码请放在项目根目录 lib 目录下，项目所需最基本的文件包括 ``入口文件``以及``页面文件``
 - 入口文件为 main.dart
 
 - 页面文件建议放置在 lib/pages 目录下
 ```javascript
 ├── api //接口文件夹
-│   └── home.dart
+│   └── home
+│   │   └── home.dart
+│   └── mine
+│       └── mine.dart
 ├── common //公共方法文件夹
-│   ├── choose_rootwidget.dart
+│   └── choose_rootwidget.dart
 │   ├── event_bus.dart
 │   ├── http.dart
 │   ├── storage.dart
@@ -27,38 +59,19 @@ clone项目之后,在当前文件夹下,终端执行```flutter packages get```
 │   └── config.dart
 ├── main.dart // 入口文件
 ├── models //模型数据文件夹
-│   ├── doings
-│   │   └── doing.dart
-│   ├── home
+│   └── home
 │   │   └── home.dart
-│   ├── mine
-│   │   └── mine.dart
-│   ├── study
-│   │   └── study.dart
-│   └── zother
-│       └── other.dart
+│   └── mine
+│       └── mine.dart
 ├── pages //页面文件夹
-│   ├── detail
-│   │   └── detail.dart
-│   ├── doings
-│   │   └── doing.dart
-│   ├── home
+│   └── home
 │   │   └── home.dart
-│   ├── mine
-│   │   └── mine.dart
-│   ├── study
-│   │   └── study.dart
-│   └── zother
-│       ├── launch_animation.dart
-│       ├── tabbar_item.dart
-│       └── tabbar_widget.dart
+│   └── mine
+│       └── mine.dart
 ├── provider //状态(共享)管理文件夹
-│   └── login.dart
+│   └── global_notice.dart
 ├── routes //路由配置文件夹
-│   ├── detail.dart
 │   └── router.dart
-├── service //提供服务的文件夹（针对页面的服务）
-│   └── user_service.dart
 └── widgets //公共组件文件夹
     ├── dashed_line.dart
     ├── loading_widget.dart
@@ -80,135 +93,119 @@ clone项目之后,在当前文件夹下,终端执行```flutter packages get```
 - 文件夹和文件名
 > pages文件夹下面的文件命名: 小写+下划线+page.dart 或者 小写+下划线+功能名+page.dart（命名规则必须是以下划线分开，以page结束），比如：person_play_page.dart
 
-> models、provider、routes、service、这些文件夹里面的文件夹或者是文件的命名必须要与pages文件夹里面的页面文件一一对应
+> models、api这些文件夹里面的文件夹或者是文件的命名必须要与pages文件夹里面的页面文件一一对应
 
 - 类型名(类名,函数类型名):大写开头驼峰
 
 - 变量名(包含const final 常量):使用小写开头驼峰, const可以使用大写+下划线的方式,如同java中一样
 
-- 导包有顺序要求,且每"部分"间空行分隔开,每部分内按字母排序,按如下顺序排序
-
-    dart sdk内的库
-
-    flutter内的库
-
-    第三方库
-
-    自己的库
-
-    相对路径引用
-
 ## 三、路由的配置
-#### 1、在routes文件夹下添加对应的路由文件，如detail.dart
+#### 1、在home_route.dart文件夹下添加对应的路由文件，如detail.dart
 #### 2、配置detail.dart
 ```javascript
-import 'package:flutter/material.dart';
-import '../pages/detail/detail.dart';
-// 如果需要接受参数，则需要加arguments
-Map<String, WidgetBuilder> detail={
- '/detail':(context, {arguments}) => DetailPage(arguments: arguments)
+import 'package:hftech_flutter/config/config.dart';
+import 'package:hftech_flutter/pages/home/detail.dart';
+
+Map<String,SJWidgetBuilder> homeRoute ={
+  //添加 有参数的路由地址 
+  "/home_detail":(context,args) => HomeDetailPage(arguments: args,),
 };
 // 如果不需要接受参数，直接添加即可
-// Map<String, WidgetBuilder> detail={
-//  '/detail':(context) => DetailPage()
+// Map<String, SJWidgetBuilder> homeRoute={
+//  '/home_detail':(context,args) =>HomeDetailPage(),
 // };
 ```
 ### 3、配置router.dart
 导入路由文件，并在拦截路由里面添加
 ```javascript
-routes.addAll(detail);
+routes.addAll(homeRoute);
 ```
 ### 4、路由参数的传递
 ① 首先在routes文件夹里面配置对应的arguments
 
 ```javascript
-Map<String, WidgetBuilder> detail={
- '/detail':(context, {arguments}) => DetailPage(arguments: arguments)
+Map<String,SJWidgetBuilder> homeRoute ={
+  //添加 有参数的路由地址 
+  "/home_detail":(context,args) => HomeDetailPage(arguments: args,),
 };
 ```
 
 ② 参数的传递，传递Map对象
 ```javascript
-Navigator.pushNamed(context, '/detail', arguments: {'id': 32332444});
+Navigator.of(context).pushNamed("/home_detail",arguments: {"key":"fdaklfjdlsafjdsa"});
 ```
 
 ③ 参数的接受,接受Map对象
 ```javascript
-class DetailPage extends StatefulWidget {
-  final Map arguments;
-  DetailPage({Key key, this.arguments}) : super(key: key);
+import 'package:flutter/material.dart';
+
+class HomeDetailPage extends StatefulWidget {
+  final Object? arguments;
+  const HomeDetailPage({Key? key,this.arguments}) : super(key: key);
 
   @override
-  _DetailPageState createState() => _DetailPageState();
+  State<HomeDetailPage> createState() => _HomeDetailPageState();
 }
-class _DetailPageState extends State<DetailPage> {
+
+class _HomeDetailPageState extends State<HomeDetailPage> {
   @override
   Widget build(BuildContext context) {
-    var id = widget.arguments['id'];
+    var args;
+    if(widget.arguments is Map){
+      args = widget.arguments as Map;
+    }
+   
     return Scaffold(
-      ...
+      appBar: AppBar(
+        title: Text("详情页"),
+        centerTitle: true,
+      ),
+      body: Container(
+        color: Colors.white,
+        child: Center(
+          child: Text("本页面主要用来测试路由跳转,以及参数的传递,接收到的参数是:${args["key"]}"),
+        ),
+      ),
     );
   }
 }
 ```
 
-
 ## 四、Provider的配置和使用
-#### 1、在provider文件夹下面新增对应的provider的类文件，如login.dart，固定的格式如下
+#### 1、在provider文件夹下面新增对应的provider的类文件，如global_notice.dart
 ```javascript
+//这是一个例子  比如在首页/我的页面 都需要展示消息状态, 每当有新的消息/用户读取消息 两个页面都要展示有新消息状态  
 import 'package:flutter/material.dart';
-class Login with ChangeNotifier {
-  List _userInfo=[];
 
-  // get方法
-  List get cartList => this._userInfo;
+class GlobalNotice with ChangeNotifier{
 
-  Login(){
-    init();
+  late bool _hasNewsNotice;
+  GlobalNotice(this._hasNewsNotice);
+
+  void updateNotice()async{
+  //每当收到新消息或者读取消息时 就变更状态
+   //这里可以请求接口,确认是否还有未读消息  要跟据实际情况
+   _hasNewsNotice = !_hasNewsNotice;
+    notifyListeners();
+    
   }
-
-  init(){
-    //初始化
-  }
-
-  removeToken(){
-    //实现流程
-  }
-
-  // 更多的普通方法或者get方法
-  ...
-
+  bool get hasNewsNotice => _hasNewsNotice;
 }
 ```
 #### 2、在main.dart里面配置，首先引入provider的文件，然后在MultiProvider类里面的providers的list添加通知类，按如下代码格式添加即可：
 ```javascript
-ChangeNotifierProvider(create: (_)=> Login())
+ChangeNotifierProvider(create: (_) => GlobalNotice(false)),
 ```
 
 #### 3、使用方法
-- 在需要使用的地方首先引入对应的provider
-- 给类添加一个属性
-- 在build里面对provider进行实例化并赋给属性
-- 调用provider的set方法或者get方法
-
-固定格式如下：
 ```javascript
-class _MineState extends State<Mine> {
-  var loginProvider;
-  ...
-  _getUserinfo(){
-    this.loginProvider.removeToken();
-  }
-  ...
-  @override
-  Widget build(BuildContext context) {
-    this.loginProvider = Provider.of<Login>(context);
-    print(this.loginProvider.cartList);
-    return Scaffold(
-      ....
-    )
-  }
-}
+//修改状态
+Provider.of<GlobalNotice>(context, listen: false).updateNotice();
+//在widget拿到状态并展示
+child: Container(child: Consumer<GlobalNotice>(builder: ((context, notice, _) {
+     return Text("当前provider的取值为:${notice.hasNewsNotice}",style: TextStyle(color: Colors.black87,fontSize: 16));
+    }))
+),
 ```
 
 ## 五、页面缓存的配置
@@ -226,18 +223,15 @@ class _MineState extends State<Mine> with AutomaticKeepAliveClientMixin {
 ```
 
 ## 六、事件总线（EventBus）
-#### 1、主要是对common文件夹下面的event_bus.dart的编写
-
-固定格式实例：
+#### 1、主要是对common文件夹下面的event_bus.dart的编写,具体应用在框架中有例子
 ```javascript
-import 'package:event_bus/event_bus.dart';
-
+//全局事件总线  类似于广播 iOS的通知
 EventBus eventBus = new EventBus();
 
-class UserEvent {
-  String str;
-  UserEvent(String str) {
-    this.str = str;
+class ChangeTabIndex {
+  late int index;
+  ChangeTabIndex(index) {
+    this.index = index;
   }
 }
 ```
@@ -246,36 +240,27 @@ class UserEvent {
 
 实例：
 ```javascript
-import '../../common/event_bus.dart';
-class _DoingsState extends State<Doings> {
   ...
-  @override
-    void dispose() {
-      super.dispose();
-      eventBus.fire(new UserEvent('登录成功....'));
-    }
+   eventBus.fire(ChangeTabIndex(1));
   ...
-}
 ```
 
 #### 3、引入eventbus文件，添加订阅事件
 
 实例：
 ```javascript
-import '../../common/event_bus.dart';
-class _MineState extends State<Mine> {
-  ...
-  @override
-    void initState() {
-      super.initState();
-      eventBus.on<UserEvent>().listen((event){
-        this._getUserinfo();
-      });
-    }
-  ...
-}
-```
+@override
+  void initState() {
+    super.initState();
 
+    eventBus.on<ChangeTabIndex>().listen((event) {
+      setState(() {
+        this.currentIndex = event.index;
+        controller?.jumpToPage(event.index);
+      });
+    });
+  }
+```
 ## 七、模型层(Model类)的建立
 #### 1、规则说明
 转换成model类的好处：转换后可以减少上线后APP崩溃和出现异常，所以如果后端接口返回的数据层级比较复杂，原则上每个接口返回的数据都需要经过model层的转换，首先需要制作model类模型，然后用model的形式编辑UI界面。
@@ -291,14 +276,17 @@ class _MineState extends State<Mine> {
 
 生成工具网址：https://javiercbk.github.io/json_to_dart/
 
-![model类](./test/model.png)
 #### 3、model类的使用
 在实际使用场景中，建议把model的使用放在api文件夹里面
 ```javascript
-import '../model/ProductModel.dart';
-var result = await Dio().get(api);
-var productList = new ProductModel.fromJson(result.data);
-// productList就是最后去使用数据
+class HomeApi{
+  static Future<HomePageModel?> getHomepageData() async{
+    return HomePageModel.fromJson(await HttpGo.httpRequest(
+      "请求地址",
+      queryParams: {"args": 2},
+    ));
+  }
+}
 ```
 ## 八、下拉刷新(pull_to_refresh)的使用
 #### 1.使用规则
@@ -373,88 +361,11 @@ var productList = new ProductModel.fromJson(result.data);
   }
 ```
 
-- 具体🌰如下,有需要的可以直接复制一下
-
-```javascript
-import 'package:pull_to_refresh/pull_to_refresh.dart';
-class Demo extends StatefulWidget {
-  @override
-  _DemoState createState() => _DemoState();
-}
-class _DemoState extends State<Demo> {
-  //放置数据
-  List data;
-  //页码
-  int page = 1;
-  //initialRefresh表示进入页面自动刷新,设置false则不默认刷新
-  RefreshController _refreshController =
-  RefreshController(initialRefresh: true);
-
-
-  //下拉刷新调用的方法
-  void _onRefresh() async {
-    //这里 用延时模拟网络请求
-    await Future.delayed(Duration(milliseconds: 1000));
-    //请求完毕,根据请求的情况设置下拉刷新状态
-    if(请求成功){
-      data =  请求成功后的数据;
-    //刷新界面
-    setState(() {
-
-    });
-      _refreshController.refreshCompleted();
-    }else{
-      _refreshController.refreshFailed();
-    } 
-  }
- //上拉加载更多调用的方法
-  void _onLoading() async {
-    page ++ ;
-    //这里 用延时模拟网络请求
-    await Future.delayed(Duration(milliseconds: 1000));
-    //请求完毕,根据请求的情况设置下拉刷新状态
-    if(请求成功 && 数据不为空){
-      data =  原数据 +  请求成功后的数据;
-    //刷新界面
-    setState(() {
-    });
-      _refreshController.loadComplete();
-    }else if(数据为空){
-      //数据为空处理
-      _refreshController.loadNoData();
-    }else if(请求失败){
-      //请求失败处理
-      _refreshController.loadFailed();
-    }
-  }
-  @override
-  Widget build(BuildContext context) {
-    return SmartRefresher(
-      //页面是否需要下拉刷新
-      enablePullDown: true,  
-      //页面是否需要上拉加载 
-      enablePullUp: true,
-      //控制器
-      controller: _refreshController,
-      //下拉刷新调用的方法
-      onRefresh: _onRefresh,
-      //上拉加载更多调用的方法
-      onLoading: _onLoading,
-      //视图
-      child: ListView.builder(
-        itemBuilder: (ccontext, index) => Card(child: Center(child: Text(data[index]))),
-          itemExtent: 100.0,
-          itemCount: data.length,
-        ),
-      );
-  }
-}
-```
 
 ## 九、网络请求(Dio)框架的使用
 #### 1.使用说明
 - 项目中使用的网络请求,是在Dio基础上做的二次封装,每次新项目启动要重新配置http.dart文件,一般项目负责人都会配置好,我们只管用就可以;
-- 项目中二次封装的工具类只支持get,post请求方式,put,delete等方式目前不支持,培训集市项目中做安全检查已经明确指出这两种方式会降低项目安全等级.
+- 项目中二次封装的工具类只支持get,post请求方式,put,delete等方式目前不支持
 - 目前该框架暂不支持获取下载文件进度功能(可能随着做项目会完善该功能)
 
 #### 2.参数说明
@@ -484,7 +395,6 @@ class _DemoState extends State<Demo> {
 ```
 
 #### 3.使用🌰
-- 引入 ```import '../../Tool/HttpTool/http.dart';```
 
 ```javascript
 @override
@@ -592,10 +502,10 @@ FormData.fromMap({
 - 取值
 
 ```javascript
-	bool islogin = await Storage.getBoolValue("isLogin");
-  double height = await Storage.getDoubleValue("height");
-  int age = await Storage.getIntValue("age");
-  String value = await Storage.getStringValue("key");
+  bool? islogin = await Storage.getBoolValue("isLogin");
+  double? height = await Storage.getDoubleValue("height");
+  int? age = await Storage.getIntValue("age");
+  String? value = await Storage.getStringValue("key");
 
   print("$islogin --- $height --- $age --- $value");
 ```
